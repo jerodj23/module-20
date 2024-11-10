@@ -1,0 +1,49 @@
+version: 2.1
+
+# Make sure to add MONGODB_URI to Environment Variables in CircleCI so the tests can connect to the database
+orbs:
+  cypress: cypress-io/cypress@3.3.1
+
+jobs:
+  start-server:
+    docker:
+      - image: cypress/base:latest
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Build the app
+          command: npm run build
+      - run:
+          name: Start server in the background
+          command: |
+            npm start &
+            sleep 5   # Add a small delay to give the server time to start
+      - run:
+          name: Wait for server to be ready
+          command: npx wait-on http://localhost:3001
+
+  # Cypress test job
+  cypress-test:
+    docker:
+      - image: cypress/base:latest
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Wait for server
+          command: npx wait-on http://localhost:3001
+      - cypress/run:
+          name: Run Cypress Component Tests
+          cypress-command: npx cypress run --component
+          config: baseUrl=http://localhost:3001
+
+workflows:
+  run-tests:
+    jobs:
+      - start-server
+      - cypress-test

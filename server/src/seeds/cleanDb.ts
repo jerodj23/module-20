@@ -1,16 +1,24 @@
 import models from '../models/index.js';
-import db from '../config/connection.js';
 
-export default async (modelName: "Question", collectionName: string) => {
+export default async (modelName: keyof typeof models) => {
   try {
-    let modelExists = await models[modelName].db.db.listCollections({
-      name: collectionName
-    }).toArray()
+    const model = models[modelName];
 
-    if (modelExists.length) {
-      await db.dropCollection(collectionName);
+    if (!model) {
+      throw new Error(`Model ${modelName} does not exist.`);
+    }
+
+    // Check if there are any documents in the collection and delete them
+    const documentCount = await model.countDocuments();
+
+    if (documentCount > 0) {
+      await model.deleteMany({});
+      console.log(`All documents in the ${modelName} collection have been deleted.`);
+    } else {
+      console.log(`The ${modelName} collection is already empty.`);
     }
   } catch (err) {
+    console.error(`Error in cleanDb for model ${modelName}:`, err);
     throw err;
   }
-}
+};

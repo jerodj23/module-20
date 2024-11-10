@@ -1,0 +1,34 @@
+name: Cypress Tests
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'  # Use Node.js 18 if your application requires it
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the app
+        run: npm run build
+
+      - name: Start server in the background
+        run: npm start &
+      
+      - name: Wait for server to be ready
+        run: npx wait-on http://localhost:3001 --timeout 60000  # Increase the timeout to 60 seconds
+
+      - name: Run Cypress tests
+        run: npx cypress run

@@ -5,10 +5,17 @@ import cleanDB from "./cleanDb.js";
 import pythonQuestions from './pythonQuestions.json' assert { type: "json" };
 
 db.once('open', async () => {
-  await cleanDB('Question', 'questions');
+  try {
+    // Pass only the model name to cleanDB
+    await cleanDB('Question');
 
-  await Question.insertMany(pythonQuestions);
+    // Seed the database with questions
+    await Question.insertMany(pythonQuestions);
 
-  console.log('Questions seeded!');
-  process.exit(0);
+    console.log('Questions seeded!');
+  } catch (error) {
+    console.error('Error seeding database:', error);
+  } finally {
+    process.exit(0);
+  }
 });
